@@ -17,6 +17,7 @@ public class Card {
 		this.suit = suitValue(suit);
 	}
 	
+	// 使用字典將花色轉為數值，以方便後面比較大小
 	private int suitValue(char suit) {
 		int value = -1;
 		switch (suit) {
@@ -35,7 +36,7 @@ public class Card {
 		}
 		return value;
 	}
-
+	// 使用字典將 rank 轉為數值，以方便後面比較大小
 	private int rankValue(char rank) {
 		int value = -1;
 		switch (rank) {
