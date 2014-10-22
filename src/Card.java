@@ -1,42 +1,70 @@
+import java.util.HashMap;
+
 //package PokerCaompare;
 
 public class Card {
 	private int rank;
 	private int suit;
+	private HashMap<String, Integer> suitMap = new HashMap<String, Integer>();
+	private HashMap<String, Integer> rankMap = new HashMap<String, Integer>();
+	
+	public Card(){
+		// build dictionary for mapping suit/rank to value
+		suitMap.put("C", 0);
+		suitMap.put("D", 1);
+		suitMap.put("H", 2);
+		suitMap.put("S", 3);
+		
+		rankMap.put("2", 2);
+		rankMap.put("3", 3);
+		rankMap.put("4", 4);
+		rankMap.put("5", 5);
+		rankMap.put("6", 6);
+		rankMap.put("7", 7);
+		rankMap.put("8", 8);
+		rankMap.put("9", 9);
+		rankMap.put("T", 10);
+		rankMap.put("J", 11);
+		rankMap.put("Q", 12);
+		rankMap.put("K", 13);
+		rankMap.put("A", 14);
+	}
 	
 	public int getRank() {
 		return rank;
 	}
-	public void setRank(char rank) {
-		this.rank = rankValue(rank);
+	public void setRank(String rank) {
+		//this.rank = rankValue(rank);
+		this.rank = rankMap.get(rank);
 	}
 	public int getSuit() {
 		return suit;
 	}
-	public void setSuit(char suit) {
-		this.suit = suitValue(suit);
+	public void setSuit(String suit) {
+		//this.suit = suitValue(suit);
+		this.suit = suitMap.get(suit);
 	}
-	
-	// 使用字典將花色轉為數值，以方便後面比較大小
+	/*
+	// suit mapping to value 
 	private int suitValue(char suit) {
 		int value = -1;
 		switch (suit) {
 		case 'C':
-			value = 0;// 梅花
+			value = 0;// clubs
 			break;
 		case 'D':
-			value = 1;// 方塊
+			value = 1;// diamonds
 			break;
 		case 'H':
-			value = 2;// 愛心
+			value = 2;// hearts
 			break;
 		case 'S':
-			value = 3;// 黑桃
+			value = 3;// spades
 			break;
 		}
 		return value;
 	}
-	// 使用字典將 rank 轉為數值，以方便後面比較大小
+	// rank mapping to value 
 	private int rankValue(char rank) {
 		int value = -1;
 		switch (rank) {
@@ -82,5 +110,6 @@ public class Card {
 		}
 		return value;
 	}
-
+	*/
+	
 }

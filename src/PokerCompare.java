@@ -1,9 +1,14 @@
 //package PokerCompare;
 /**
- * 1.先統計每種點數出現的次數、每種花色出現的次數。 2.依照先比出現次數在比點數大小排序五張牌 3.根據4,5,6取得牌型。
- * 4.連續5種點數出現一次為順子。 5.根據每種花色出現的次數偵測同花，又順又同花則是同花順。 6.根據單張牌出現的次數，偵測對子、三條、四條、葫蘆、雜牌。
- * 7.取得牌型後，先比牌型，若牌型相同則比較單張牌的點數
- * 因為已將每張牌排序，除了順子類要特別處理以外，對子、三條、四條、葫蘆、雜牌可以用字典順序的方式比較大小。
+ * 1.count rank/suit occurrences
+ * 2.sort hand cards
+ * 3.recognize the pattern of hand cards
+ * 	3.1.recognize straight (by consecutive 5 value=1)  
+ * 	3.2.recognize flush (scan suit)
+ * 	3.3.recognize pair, three of a kind, four of a kind, full house and high card (by occurrences)。
+ * 4.compare
+ * 	4.1 compare pattern
+ * 	4.2 compare value
  * 
  * @author Jayson LP Chen
  * @version v1.0
@@ -54,7 +59,7 @@ public class PokerCompare {
 			System.out.println("Flush.");
 		}
 		if (h.pattern == "FullHouse") {
-			System.out.println("Full house");
+			System.out.println("Full house.");
 		}
 		if (h.pattern == "FourOfAKind") {
 			System.out.println("Four of a kind.");
@@ -74,10 +79,10 @@ public class PokerCompare {
 		int[] statistics = new int[15];
 		int[] suit = new int[4];
 
-		h.pattern = "HighCard";// 初始化 雜牌
+		h.pattern = "HighCard";// initialize
 
-		// 統計花色跟牌點出現次數，這樣檢查牌型的迴圈比較簡單
-		for (int i = 0; i < 5; i++)// 統計
+		// count occurrences
+		for (int i = 0; i < 5; i++)
 		{
 			statistics[h.cards[i].getRank()]++;
 			if (h.cards[i].getRank() == 14)
@@ -85,18 +90,16 @@ public class PokerCompare {
 			suit[h.cards[i].getSuit()]++;
 		}
 
-		// 因為長度短 直接作簡單排序即可
-		// 先排出次數再排點數大小
+		// because of max=5 so we sort simply
+		// priority: 1.occurrence. 2.rank
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 4 - i; j++) {
 				boolean needswap = false;
 
-				if (statistics[h.cards[j].getRank()] > statistics[h.cards[j + 1]
-						.getRank()])
+				if (statistics[h.cards[j].getRank()] > statistics[h.cards[j + 1].getRank()])
 					needswap = true;
-				// 出現次數相同 然後比點數,點數相同也不用比花色 因為沒差
-				if (statistics[h.cards[j].getRank()] == statistics[h.cards[j + 1]
-						.getRank()])
+				
+				if (statistics[h.cards[j].getRank()] == statistics[h.cards[j + 1].getRank()])
 					if (h.cards[j].getRank() > h.cards[j + 1].getRank())
 						needswap = true;
 
@@ -110,55 +113,55 @@ public class PokerCompare {
 			}
 		}
 
-		// 連續五個洞都有值且為1則為順子
-		// straight
+		// straight (if consecutive 5 value=1 )
 		boolean end = false;
 		for (int i = 1; i < 11 && !end; i++)// A2345~ TJQKA
 		{
 			int j;
-			for (j = 0; j < 5; j++)// i為開頭 j為檢查5張是否存在
+			for (j = 0; j < 5; j++)// scan hand cards from any i=1, then check i, i+1, ..., i+4 
 			{
+				// check one by one
 				if (statistics[i + j] > 1) {
-					// 偵測到大於1直接跳出 不可能有順子
+					// if the occurrences > 1, is NOT straight
 					end = true;
 					break;
 				}
-				if (statistics[i + j] < 1)// has gap
-				{ // 偵測到一個0可以跳過好幾組 不連續
-					i = i + j;// 迴圈會自動+1 成 i+j+1
+				if (statistics[i + j] < 1)// check gap
+				{ 
+					// if the occurrences < 1, is NOT straight
+					i = i + j;
 					break;
 				}
-				// else 1 沒事繼續檢查
 			}
-			if (j == 5)// 偵測到是順子
+			if (j == 5)// straight
 			{
 				h.pattern = "Straight";
 				end = true;
 			}
 		}
 
-		// suit出現 5 五張牌花色一樣為同花 5
-		// 又順又同花為同花順 8
+		// suit=5 => flush
+		// if flush & straight => StraightFlush
 		for (int i = 0; i < 4; i++) {
-			if (suit[i] == 5)// 偵測到同花
+			if (suit[i] == 5)
 			{
 				if (h.pattern == "Straight")
-					h.pattern = "StraightFlush";// 同花順
+					h.pattern = "StraightFlush";
 				else {
-					h.pattern = "Flush";// 同花
+					h.pattern = "Flush";
 				}
 				return patternValue(h.pattern);
 			}
 		}
 
-		// 某個洞出現4則為四條 可直接 return 7
-		// 某個洞出現3另外一個洞出現2是為葫蘆 6
-		// 一個洞出現3是 三條 3
-		// 兩個洞出現2是兩對 2
-		// 一個洞出現2是一對 1
-		int[] kind = new int[5]; // 0 1 2 3 4對應到 無 單張 對 三條 四條
+		// if a rank=4 => return 7
+		// if a rank=3 & another=2 => return 6
+		// if only one rank=3 => return 3
+		// if two rank=3 => return 2
+		// if only one rank=2 => return 1
+		int[] kind = new int[5]; 
 
-		for (int i = 2; i < 15; i++)// 2~A
+		for (int i = 2; i < 15; i++)
 		{
 			kind[statistics[i]]++;
 		}
@@ -167,17 +170,16 @@ public class PokerCompare {
 			h.pattern = "FourOfAKind";
 		} else if (kind[3] > 0) {
 			if (kind[2] > 0)
-				h.pattern = "FullHouse";// 葫蘆
+				h.pattern = "FullHouse";
 			else
-				h.pattern = "ThreeOfAKind";// 三條
+				h.pattern = "ThreeOfAKind";
 		} else if (kind[2] > 0) {
 			if (kind[2] == 2)
 				h.pattern = "TwoPairs";
 			else
-				// ==1
 				h.pattern = "Pair";
 		}
-		// 都沒有就雜牌 初始值
+		// if no match
 		return patternValue(h.pattern);
 	}
 
@@ -185,11 +187,8 @@ public class PokerCompare {
 		if (patternValue(B.pattern) != patternValue(W.pattern)) {
 			return patternValue(B.pattern) - patternValue(W.pattern);
 		} else if (B.pattern == "Flush" || B.pattern == "StraightFlush") {
-			// 順子
-			// A2345特別處理
-			// A2345會被排序成
-			// 2345A
-			// 特徵為:順子類、開頭是2結尾是A
+			// A2345 is special case
+			// A2345 will be sorted to 2345A
 			int B_high = B.cards[4].getRank();
 			int W_high = W.cards[4].getRank();
 
@@ -201,21 +200,21 @@ public class PokerCompare {
 
 			return B_high - W_high;
 		} else {
-			// 其他牌型 純看點數比字典順序
+			// rank compare
 			for (int i = 4; i >= 0; i--) {
 				if (B.cards[i].getRank() != W.cards[i].getRank())
 					return B.cards[i].getRank() - W.cards[i].getRank();
 			}
-			return 0;// 點數皆相等
+			return 0;
 		}
 
 	}
 
 	public int judge(Hand B, Hand W) {
-		// 先確認排型
+		// recognize pattern
 		PatternCheck(B);
 		PatternCheck(W);
-		// 比大小
+		// compare
 		return compare(B, W);
 	}
 
