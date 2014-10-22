@@ -1,3 +1,9 @@
+/**
+ * Test all pattern and compare function.
+ * 
+ * @author Jayson LP Chen
+ * @version v1.0
+ */
 public class UnitTest {
 
 	public static void main(String[] args) {
